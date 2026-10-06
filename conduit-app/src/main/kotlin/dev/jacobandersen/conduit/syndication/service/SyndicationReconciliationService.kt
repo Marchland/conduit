@@ -11,7 +11,7 @@ import dev.jacobandersen.conduit.syndication.SyndicationSendResult
 import dev.jacobandersen.conduit.util.HttpUtil
 import dev.jacobandersen.content.client.PostDto
 import dev.jacobandersen.content.event.ContentPostEvent
-import dev.jacobandersen.mf24j.Mf2Object
+import dev.jacobandersen.microformats2.Mf2Object
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.springframework.stereotype.Service
 import java.util.UUID

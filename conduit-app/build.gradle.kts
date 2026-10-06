@@ -15,7 +15,7 @@ java {
     }
 }
 
-extra["mf24jVersion"] = "0.1.0"
+extra["microformats2Version"] = "0.1.1"
 extra["contentClientVersion"] = "1.3.33"
 
 dependencies {
@@ -33,7 +33,7 @@ dependencies {
     implementation("io.github.oshai:kotlin-logging-jvm:7.0.3")
     implementation("io.nats:jnats:2.26.4")
     implementation("tools.jackson.module:jackson-module-kotlin")
-    implementation("dev.jacobandersen:mf24j:${property("mf24jVersion")}")
+    implementation("dev.jacobandersen:microformats2:${property("microformats2Version")}")
     implementation("dev.jacobandersen:content-client:${property("contentClientVersion")}")
     developmentOnly("org.springframework.boot:spring-boot-devtools")
     runtimeOnly("io.micrometer:micrometer-registry-otlp")

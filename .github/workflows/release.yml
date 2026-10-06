@@ -64,7 +64,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ghcr.io/jacobsandersen/conduit
+          images: ghcr.io/marchland/conduit
           tags: |
             type=semver,pattern={{version}}
 
