@@ -1,0 +1,49 @@
+conduit:
+  syndication:
+    default-max-graphemes: ${CONDUIT_SYNDICATION_MAX_GRAPHEMES:300}
+    targets: []
+  websub:
+    hubs: ${CONDUIT_WEBSUB_HUBS:}
+    topic-url: ${CONDUIT_WEBSUB_TOPIC_URL:}
+    connect-timeout-seconds: ${CONDUIT_WEBSUB_CONNECT_TIMEOUT_SECONDS:10}
+    read-timeout-seconds: ${CONDUIT_WEBSUB_READ_TIMEOUT_SECONDS:10}
+  events:
+    nats:
+      enabled: ${CONDUIT_EVENTS_NATS_ENABLED:false}
+      url: ${CONDUIT_EVENTS_NATS_URL:nats://localhost:4222}
+      content-stream: ${CONDUIT_EVENTS_NATS_CONTENT_STREAM:CONTENT}
+      content-subject: ${CONDUIT_EVENTS_NATS_CONTENT_SUBJECT:content.>}
+      content-consumer: ${CONDUIT_EVENTS_NATS_CONTENT_CONSUMER:conduit-content}
+      distribution-stream: ${CONDUIT_EVENTS_NATS_DISTRIBUTION_STREAM:DISTRIBUTION}
+      distribution-subject: ${CONDUIT_EVENTS_NATS_DISTRIBUTION_SUBJECT:syndication.>}
+
+spring:
+  application:
+    name: conduit
+  datasource:
+    url: jdbc:postgresql://${SPRING_PG_HOST}:${SPRING_PG_PORT:5432}/${SPRING_PG_DB}
+    username: ${SPRING_PG_USERNAME}
+    password: ${SPRING_PG_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: UTC
+  flyway:
+    baseline-version: 0
+    baseline-on-migrate: true
+
+jobrunr:
+  background-job-server:
+    enabled: ${JOBRUNR_BACKGROUND_JOB_SERVER:true}
+  dashboard:
+    enabled: ${JOBRUNR_DASHBOARD_ENABLE:true}
+  database:
+    type: sql
+
+logging:
+  level:
+    root: ${LOGGING_LEVEL_ROOT:info}
