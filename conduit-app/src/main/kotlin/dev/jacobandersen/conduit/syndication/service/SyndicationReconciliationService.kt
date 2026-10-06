@@ -9,7 +9,9 @@ import dev.jacobandersen.conduit.syndication.SyndicationContentMapper
 import dev.jacobandersen.conduit.syndication.SyndicationHttpClient
 import dev.jacobandersen.conduit.syndication.SyndicationSendResult
 import dev.jacobandersen.conduit.util.HttpUtil
+import dev.jacobandersen.content.client.PostDto
 import dev.jacobandersen.content.event.ContentPostEvent
+import dev.jacobandersen.mf24j.Mf2Object
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.springframework.stereotype.Service
 import java.util.UUID
@@ -17,11 +19,29 @@ import java.util.UUID
 private val logger = KotlinLogging.logger {}
 
 /**
- * Reconciles a post's actual syndicated copies against the targets it desires,
- * driven by `content.post.*` events. On a public post, every desired target
- * gets a copy (or is re-based on a rename); targets no longer desired are
- * retracted. On a non-public/deleted post, copies are retracted but desired
- * targets are retained so a re-publish re-syndicates. Emits `syndication.*`.
+ * The neutral input the reconciler works from: a post's identity, visibility
+ * and the targets it desires. Built from either a `content.post.*` event or the
+ * read model (reconciliation sweeps).
+ */
+data class SyndicationReconcileInput(
+    val postId: String,
+    val url: String,
+    val previousUrl: String?,
+    val status: String,
+    val visibility: String,
+    val deleted: Boolean,
+    val type: String?,
+    val post: Mf2Object?,
+    val syndicationTargets: List<String>,
+)
+
+/**
+ * Reconciles a post's actual syndicated copies against the targets it desires.
+ * On a public post, every desired target gets a copy (or is re-based on a
+ * rename); targets no longer desired are retracted. On a non-public/deleted
+ * post, copies are retracted but desired targets are retained so a re-publish
+ * re-syndicates. Idempotent: already-syndicated targets are left alone. Emits
+ * `syndication.*`.
  */
 @Service
 class SyndicationReconciliationService(
@@ -31,10 +51,42 @@ class SyndicationReconciliationService(
     private val eventPublisher: SyndicationEventPublisher,
 ) {
     fun reconcile(event: ContentPostEvent) {
-        val postId = runCatching { UUID.fromString(event.id) }.getOrNull() ?: return
-        val canonicalUrl = event.url
-        val public = event.status == "PUBLISHED" && event.visibility == "PUBLIC" && !event.deleted
-        val desired = desiredTargets(event.syndicationTargets)
+        reconcile(
+            SyndicationReconcileInput(
+                postId = event.id,
+                url = event.url,
+                previousUrl = event.previousUrl,
+                status = event.status,
+                visibility = event.visibility,
+                deleted = event.deleted,
+                type = event.type,
+                post = event.post,
+                syndicationTargets = event.syndicationTargets,
+            ),
+        )
+    }
+
+    fun reconcile(post: PostDto) {
+        reconcile(
+            SyndicationReconcileInput(
+                postId = post.id,
+                url = post.url,
+                previousUrl = null,
+                status = post.status,
+                visibility = post.visibility,
+                deleted = post.deleted,
+                type = post.type,
+                post = post.post,
+                syndicationTargets = post.desiredSyndicationTargets,
+            ),
+        )
+    }
+
+    fun reconcile(input: SyndicationReconcileInput) {
+        val postId = runCatching { UUID.fromString(input.postId) }.getOrNull() ?: return
+        val canonicalUrl = input.url
+        val public = input.status == "PUBLISHED" && input.visibility == "PUBLIC" && !input.deleted
+        val desired = desiredTargets(input.syndicationTargets)
         val actual = postSyndicationService.findByPostId(postId).associateBy { it.targetUid }
 
         if (!public) {
@@ -50,15 +102,15 @@ class SyndicationReconciliationService(
             when {
                 existing == null -> {
                     postSyndicationService.record(postId, target.uid)
-                    syndicate(postId, event, target.uid, canonicalUrl)
+                    syndicate(postId, input, target.uid, canonicalUrl)
                 }
 
                 existing.syndicatedUrl == null -> {
-                    syndicate(postId, event, target.uid, canonicalUrl)
+                    syndicate(postId, input, target.uid, canonicalUrl)
                 }
 
-                event.previousUrl != null && event.previousUrl != canonicalUrl -> {
-                    rebase(postId, event, target.uid, event.previousUrl!!, canonicalUrl)
+                input.previousUrl != null && input.previousUrl != canonicalUrl -> {
+                    rebase(postId, input, target.uid, input.previousUrl!!, canonicalUrl)
                 }
 
                 else -> {
@@ -78,19 +130,19 @@ class SyndicationReconciliationService(
 
     private fun syndicate(
         postId: UUID,
-        event: ContentPostEvent,
+        input: SyndicationReconcileInput,
         targetUid: String,
         canonicalUrl: String,
     ) {
         val target = properties.targetByUid(targetUid) ?: return
-        val post = event.post ?: return
+        val post = input.post ?: return
         if (HttpUtil.isBlockedHost(target.endpoint, failClosedOnDnsError = false)) {
             logger.warn { "Skipping syndication to blocked target \"$targetUid\" for post $postId" }
             return
         }
 
         val payload =
-            SyndicationContentMapper.build(post, event.type, canonicalUrl, properties.effectiveMaxGraphemes(target))
+            SyndicationContentMapper.build(post, input.type, canonicalUrl, properties.effectiveMaxGraphemes(target))
         when (val result = httpClient.sendCreate(target, payload)) {
             is SyndicationSendResult.Success -> {
                 val url = result.location ?: canonicalUrl
@@ -141,7 +193,7 @@ class SyndicationReconciliationService(
 
     private fun rebase(
         postId: UUID,
-        event: ContentPostEvent,
+        input: SyndicationReconcileInput,
         targetUid: String,
         previousUrl: String,
         canonicalUrl: String,
@@ -150,7 +202,7 @@ class SyndicationReconciliationService(
         if (!target.supports(SyndicationAction.DELETE) || !target.supports(SyndicationAction.CREATE)) return
         if (HttpUtil.isBlockedHost(target.endpoint, failClosedOnDnsError = false)) return
 
-        when (val deleteResult = httpClient.sendDelete(target, previousUrl)) {
+        when (httpClient.sendDelete(target, previousUrl)) {
             is SyndicationSendResult.Success -> {
                 logger.info { "Syndication rebase removed old copy for post $postId at \"$targetUid\"" }
             }
@@ -159,6 +211,6 @@ class SyndicationReconciliationService(
                 logger.warn { "Syndication rebase could not remove old copy at \"$targetUid\" for post $postId" }
             }
         }
-        syndicate(postId, event, targetUid, canonicalUrl)
+        syndicate(postId, input, targetUid, canonicalUrl)
     }
 }

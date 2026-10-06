@@ -83,7 +83,14 @@ class SyndicationReconciliationServiceTest {
         verify(postSyndicationService).record(postId, "t1")
         verify(postSyndicationService).recordOutcome(postId, "t1", "https://target.example/copy/1")
         verify(eventPublisher).publish(
-            SyndicationEvent(SyndicationEventType.SYNDICATED, postId.toString(), "t1", "Target One", "https://target.example/copy/1", sourceUrl),
+            SyndicationEvent(
+                SyndicationEventType.SYNDICATED,
+                postId.toString(),
+                "t1",
+                "Target One",
+                "https://target.example/copy/1",
+                sourceUrl,
+            ),
         )
     }
 

@@ -2,6 +2,7 @@ package dev.jacobandersen.conduit.event
 
 import dev.jacobandersen.conduit.syndication.service.SyndicationReconciliationService
 import dev.jacobandersen.conduit.websub.WebsubPublisher
+import dev.jacobandersen.content.event.ContentPostEvent
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.any
 import org.mockito.kotlin.given
@@ -50,7 +51,7 @@ class ContentEventDispatcherTest {
 
         dispatcher.handle(createdJson(version = 1))
 
-        verify(reconciliation).reconcile(any())
+        verify(reconciliation).reconcile(any<ContentPostEvent>())
         verify(websubPublisher).publish()
         verify(checkpointService).record(postId, 1)
     }
@@ -61,7 +62,7 @@ class ContentEventDispatcherTest {
 
         dispatcher.handle(createdJson(version = 3))
 
-        verify(reconciliation, never()).reconcile(any())
+        verify(reconciliation, never()).reconcile(any<ContentPostEvent>())
         verify(checkpointService, never()).record(any(), any())
     }
 }

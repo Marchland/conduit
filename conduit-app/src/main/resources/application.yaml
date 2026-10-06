@@ -16,6 +16,17 @@ conduit:
       content-consumer: ${CONDUIT_EVENTS_NATS_CONTENT_CONSUMER:conduit-content}
       distribution-stream: ${CONDUIT_EVENTS_NATS_DISTRIBUTION_STREAM:SYNDICATION}
       distribution-subject: ${CONDUIT_EVENTS_NATS_DISTRIBUTION_SUBJECT:syndication.>}
+  reconciliation:
+    enabled: ${CONDUIT_RECONCILIATION_ENABLED:false}
+    interval-minutes: ${CONDUIT_RECONCILIATION_INTERVAL_MINUTES:60}
+    page-size: ${CONDUIT_RECONCILIATION_PAGE_SIZE:100}
+    max-pages: ${CONDUIT_RECONCILIATION_MAX_PAGES:50}
+
+# The content service (Bastion) read API, used by the reconciliation sweep.
+content:
+  client:
+    base-url: ${BASTION_URL:}
+    service-token: ${BASTION_SERVICE_TOKEN:}
 
 spring:
   application:

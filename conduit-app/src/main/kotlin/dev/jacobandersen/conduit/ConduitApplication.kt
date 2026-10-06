@@ -1,6 +1,7 @@
 package dev.jacobandersen.conduit
 
 import dev.jacobandersen.conduit.config.ConduitEventProperties
+import dev.jacobandersen.conduit.config.ReconciliationProperties
 import dev.jacobandersen.conduit.config.SyndicationProperties
 import dev.jacobandersen.conduit.config.WebsubProperties
 import org.springframework.boot.autoconfigure.SpringBootApplication
@@ -12,6 +13,7 @@ import org.springframework.boot.runApplication
     SyndicationProperties::class,
     WebsubProperties::class,
     ConduitEventProperties::class,
+    ReconciliationProperties::class,
 )
 class ConduitApplication
 
