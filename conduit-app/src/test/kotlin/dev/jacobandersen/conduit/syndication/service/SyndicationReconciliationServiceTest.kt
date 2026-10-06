@@ -10,8 +10,8 @@ import dev.jacobandersen.conduit.syndication.SyndicationSendResult
 import dev.jacobandersen.conduit.syndication.domain.PostSyndication
 import dev.jacobandersen.content.event.ContentPostEvent
 import dev.jacobandersen.content.event.ContentPostEventType
-import dev.jacobandersen.mf24j.Mf2Object
-import dev.jacobandersen.mf24j.Mf2Value
+import dev.jacobandersen.microformats2.Mf2Object
+import dev.jacobandersen.microformats2.Mf2Value
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.any
 import org.mockito.kotlin.eq

@@ -2,7 +2,7 @@ package dev.jacobandersen.conduit.syndication
 
 import dev.jacobandersen.conduit.config.SyndicationProperties
 import dev.jacobandersen.conduit.util.StringUtil.excerpt
-import dev.jacobandersen.mf24j.Mf2Object
+import dev.jacobandersen.microformats2.Mf2Object
 import org.springframework.http.MediaType
 import org.springframework.http.client.ClientHttpRequestFactory
 import org.springframework.http.client.JdkClientHttpRequestFactory
