@@ -1,0 +1,14 @@
+conduit:
+  syndication:
+    targets: []
+  events:
+    nats:
+      enabled: false
+
+jobrunr:
+  background-job-server:
+    enabled: false
+  dashboard:
+    enabled: false
+  database:
+    type: sql
