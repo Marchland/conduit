@@ -96,7 +96,7 @@ class SyndicationReconciliationService(
                 val url = result.location ?: canonicalUrl
                 postSyndicationService.recordOutcome(postId, targetUid, url)
                 eventPublisher.publish(
-                    SyndicationEvent(SyndicationEventType.SYNDICATED, postId.toString(), targetUid, url, canonicalUrl),
+                    SyndicationEvent(SyndicationEventType.SYNDICATED, postId.toString(), targetUid, target.name, url, canonicalUrl),
                 )
                 logger.info { "Syndicated post $postId to \"$targetUid\" (HTTP ${result.statusCode})" }
             }
@@ -135,7 +135,7 @@ class SyndicationReconciliationService(
             postSyndicationService.clearOutcome(postId, targetUid)
         }
         eventPublisher.publish(
-            SyndicationEvent(SyndicationEventType.RETRACTED, postId.toString(), targetUid, sourceUrl = sourceUrl),
+            SyndicationEvent(SyndicationEventType.RETRACTED, postId.toString(), targetUid, target?.name, sourceUrl = sourceUrl),
         )
     }
 

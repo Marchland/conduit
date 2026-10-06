@@ -83,7 +83,7 @@ class SyndicationReconciliationServiceTest {
         verify(postSyndicationService).record(postId, "t1")
         verify(postSyndicationService).recordOutcome(postId, "t1", "https://target.example/copy/1")
         verify(eventPublisher).publish(
-            SyndicationEvent(SyndicationEventType.SYNDICATED, postId.toString(), "t1", "https://target.example/copy/1", sourceUrl),
+            SyndicationEvent(SyndicationEventType.SYNDICATED, postId.toString(), "t1", "Target One", "https://target.example/copy/1", sourceUrl),
         )
     }
 
@@ -108,7 +108,7 @@ class SyndicationReconciliationServiceTest {
         verify(httpClient).sendDelete(any(), eq(sourceUrl))
         verify(postSyndicationService).remove(postId, "t1")
         verify(eventPublisher).publish(
-            SyndicationEvent(SyndicationEventType.RETRACTED, postId.toString(), "t1", null, sourceUrl),
+            SyndicationEvent(SyndicationEventType.RETRACTED, postId.toString(), "t1", "Target One", null, sourceUrl),
         )
     }
 

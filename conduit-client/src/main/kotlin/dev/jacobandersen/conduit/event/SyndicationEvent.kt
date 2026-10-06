@@ -12,6 +12,8 @@ data class SyndicationEvent(
     val postId: String,
     /** The configured syndication target uid. */
     val targetUid: String,
+    /** The syndication target's display name (for the read model). */
+    val targetName: String? = null,
     /** The downstream URL of the copy (for `SYNDICATED`). */
     val syndicatedUrl: String? = null,
     /** The post URL the copy was made from. */
