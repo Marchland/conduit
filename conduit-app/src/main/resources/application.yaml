@@ -11,6 +11,7 @@ conduit:
     nats:
       enabled: ${CONDUIT_EVENTS_NATS_ENABLED:false}
       url: ${CONDUIT_EVENTS_NATS_URL:nats://localhost:4222}
+      replicas: ${CONDUIT_EVENTS_NATS_REPLICAS:1}
       content-stream: ${CONDUIT_EVENTS_NATS_CONTENT_STREAM:CONTENT}
       content-subject: ${CONDUIT_EVENTS_NATS_CONTENT_SUBJECT:content.>}
       content-consumer: ${CONDUIT_EVENTS_NATS_CONTENT_CONSUMER:conduit-content}
