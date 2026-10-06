@@ -48,6 +48,7 @@ class NatsSyndicationEventPublisher(
                     .build(),
             )
         } else if (subjectFilter !in existing.configuration.subjects) {
+            // Conduit owns this stream; self-heal if it does not capture our subject.
             logger.info { "Extending JetStream stream $streamName to capture $subjectFilter" }
             management.updateStream(
                 StreamConfiguration.builder(existing.configuration).addSubjects(subjectFilter).build(),

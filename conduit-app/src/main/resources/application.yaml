@@ -14,7 +14,7 @@ conduit:
       content-stream: ${CONDUIT_EVENTS_NATS_CONTENT_STREAM:CONTENT}
       content-subject: ${CONDUIT_EVENTS_NATS_CONTENT_SUBJECT:content.>}
       content-consumer: ${CONDUIT_EVENTS_NATS_CONTENT_CONSUMER:conduit-content}
-      distribution-stream: ${CONDUIT_EVENTS_NATS_DISTRIBUTION_STREAM:DISTRIBUTION}
+      distribution-stream: ${CONDUIT_EVENTS_NATS_DISTRIBUTION_STREAM:SYNDICATION}
       distribution-subject: ${CONDUIT_EVENTS_NATS_DISTRIBUTION_SUBJECT:syndication.>}
 
 spring:

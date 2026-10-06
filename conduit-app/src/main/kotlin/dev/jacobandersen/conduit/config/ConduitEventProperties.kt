@@ -16,7 +16,7 @@ data class ConduitEventProperties(
         val contentStream: String = "CONTENT",
         val contentSubject: String = "content.>",
         val contentConsumer: String = "conduit-content",
-        val distributionStream: String = "DISTRIBUTION",
+        val distributionStream: String = "SYNDICATION",
         val distributionSubject: String = "syndication.>",
     )
 }

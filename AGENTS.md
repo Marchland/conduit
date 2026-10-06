@@ -37,5 +37,6 @@ Multi-module, mirroring Sigil/Beacon:
 - Config: `conduit.syndication.*` (targets, budgets), `conduit.websub.*`,
   `conduit.events.nats.*`. See `conduit-app/src/main/resources/application.yaml`.
 - Jackson 3 (`tools.jackson.*`), not Jackson 2.
-- The `DISTRIBUTION` stream is shared with Beacon; publishers extend it (never
-  narrow) so both `webmention.>` and `syndication.>`/`websub.>` coexist.
+- Streams are **per-producer**: Conduit owns `SYNDICATION` (`syndication.>`,
+  plus `websub.>` when emitted); Beacon owns `WEBMENTION`. Never share a stream
+  between producers.
