@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.3.0](https://github.com/jacobsandersen/conduit/compare/v0.2.0...v0.3.0) (2026-10-06)
+
+
+### Features
+
+* configurable JetStream stream replicas ([1c6f9b4](https://github.com/jacobsandersen/conduit/commit/1c6f9b482e70c6297a50925da85ffbc8b4ab778e))
+* make JetStream stream replicas configurable ([a17c5cb](https://github.com/jacobsandersen/conduit/commit/a17c5cb0b63a544adde3c088125c777a4326c6e7))
+
+
+### Tests
+
+* cover the reconciliation sweep ([299554c](https://github.com/jacobsandersen/conduit/commit/299554c6677e961cf8e2440ede59c2f50629da65))
+* cover the reconciliation sweep ([e088239](https://github.com/jacobsandersen/conduit/commit/e088239bddcad3d71f94d90ce172a464ada922bb))
+
 ## [0.2.0](https://github.com/jacobsandersen/conduit/compare/v0.1.0...v0.2.0) (2026-10-06)
 
 
