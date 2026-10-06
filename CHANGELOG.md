@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.3.1](https://github.com/Marchland/conduit/compare/v0.3.0...v0.3.1) (2026-10-06)
+
+
+### Miscellaneous Chores
+
+* move packages to Marchland and rename mf24j -&gt; microformats2 ([fb31523](https://github.com/Marchland/conduit/commit/fb315236c40bd0f29e9b7826c7f5c9319d84c8de))
+* move packages to Marchland and rename mf24j -&gt; microformats2 ([ce07e4a](https://github.com/Marchland/conduit/commit/ce07e4a7b5dd715ff9f29bc99cbbe815bdafbd4d))
+
+
+### Build System
+
+* bump content-client to 2.0.2 ([63dccb1](https://github.com/Marchland/conduit/commit/63dccb123b4d9777bf2e1247b4fed7a1a5bda2c0))
+* bump microformats2 to 0.1.2 ([d7b7dbf](https://github.com/Marchland/conduit/commit/d7b7dbfc2642594b0b79e08e4cfa9d202d6852d2))
+
 ## [0.3.0](https://github.com/jacobsandersen/conduit/compare/v0.2.0...v0.3.0) (2026-10-06)
 
 
