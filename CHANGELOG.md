@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.3.2](https://github.com/Marchland/conduit/compare/v0.3.1...v0.3.2) (2026-10-07)
+
+
+### Bug Fixes
+
+* **syndication:** surface transient failures and gate WebSub pings ([30d26a0](https://github.com/Marchland/conduit/commit/30d26a04f13ef1a7b5274412b374ba894324268e))
+* **syndication:** surface transient failures and gate WebSub pings ([b43ff80](https://github.com/Marchland/conduit/commit/b43ff80105441df8590e36d569febfdd892dddb5))
+
 ## [0.3.1](https://github.com/Marchland/conduit/compare/v0.3.0...v0.3.1) (2026-10-06)
 
 
