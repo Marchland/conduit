@@ -39,9 +39,19 @@ class ContentEventDispatcher(
         }
 
         syndicationReconciliationService.reconcile(event)
-        websubPublisher.publish()
+        if (isWebsubRelevant(event)) {
+            websubPublisher.publish()
+        }
 
         checkpointService.record(postId, event.version)
         logger.info { "Applied content event ${event.eventType} v${event.version} for post $postId" }
     }
+
+    /**
+     * WebSub subscribers only care about a post that is (or was) publicly
+     * published; skip draft/private changes so hubs are not pinged needlessly.
+     * A delete still notifies, since a published post disappearing is a change.
+     */
+    private fun isWebsubRelevant(event: ContentPostEvent): Boolean =
+        event.deleted || (event.status == "PUBLISHED" && event.visibility == "PUBLIC")
 }

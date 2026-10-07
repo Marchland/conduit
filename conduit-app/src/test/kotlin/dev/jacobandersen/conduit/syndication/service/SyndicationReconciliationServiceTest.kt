@@ -12,11 +12,13 @@ import dev.jacobandersen.content.event.ContentPostEvent
 import dev.jacobandersen.content.event.ContentPostEventType
 import dev.jacobandersen.microformats2.Mf2Object
 import dev.jacobandersen.microformats2.Mf2Value
+import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.any
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.given
 import org.mockito.kotlin.mock
+import org.mockito.kotlin.never
 import org.mockito.kotlin.verify
 import java.time.Instant
 import java.util.UUID
@@ -130,5 +132,51 @@ class SyndicationReconciliationServiceTest {
         verify(httpClient).sendDelete(any(), eq(sourceUrl))
         verify(postSyndicationService).clearOutcome(postId, "t1")
         verify(postSyndicationService, org.mockito.kotlin.never()).remove(any(), any())
+    }
+
+    @Test
+    fun `a retryable create failure is surfaced for retry`() {
+        given(postSyndicationService.findByPostId(postId)).willReturn(emptyList())
+        given(httpClient.sendCreate(any(), any())).willReturn(SyndicationSendResult.Failure(503, "HTTP 503", retryable = true))
+
+        assertThrows(SyndicationException::class.java) { service.reconcile(event()) }
+
+        verify(postSyndicationService, never()).recordOutcome(any(), any(), any())
+        verify(eventPublisher, never()).publish(any())
+    }
+
+    @Test
+    fun `a permanent create failure is dropped without retry`() {
+        given(postSyndicationService.findByPostId(postId)).willReturn(emptyList())
+        given(httpClient.sendCreate(any(), any())).willReturn(SyndicationSendResult.Failure(400, "HTTP 400", retryable = false))
+
+        service.reconcile(event())
+
+        verify(postSyndicationService, never()).recordOutcome(any(), any(), any())
+        verify(eventPublisher, never()).publish(any())
+    }
+
+    @Test
+    fun `a retryable retraction failure keeps the record and does not emit`() {
+        val record = PostSyndication(UUID.randomUUID(), postId, "t1", "https://target.example/copy/1", Instant.now())
+        given(postSyndicationService.findByPostId(postId)).willReturn(listOf(record))
+        given(httpClient.sendDelete(any(), any())).willReturn(SyndicationSendResult.Failure(503, "HTTP 503", retryable = true))
+
+        assertThrows(SyndicationException::class.java) { service.reconcile(event(targets = emptyList())) }
+
+        verify(postSyndicationService, never()).remove(any(), any())
+        verify(eventPublisher, never()).publish(any())
+    }
+
+    @Test
+    fun `a 404 on retraction is treated as already gone`() {
+        val record = PostSyndication(UUID.randomUUID(), postId, "t1", "https://target.example/copy/1", Instant.now())
+        given(postSyndicationService.findByPostId(postId)).willReturn(listOf(record))
+        given(httpClient.sendDelete(any(), any())).willReturn(SyndicationSendResult.Failure(404, "HTTP 404", retryable = false))
+
+        service.reconcile(event(targets = emptyList()))
+
+        verify(postSyndicationService).remove(postId, "t1")
+        verify(eventPublisher).publish(any())
     }
 }

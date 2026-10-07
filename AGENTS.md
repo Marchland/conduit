@@ -10,8 +10,8 @@ Multi-module, mirroring Sigil/Beacon:
 
 - `conduit-client/` - published library (`dev.jacobandersen:conduit-client`): the
   producer-owned event schemas (`dev.jacobandersen.conduit.event.SyndicationEvent`,
-  `ConduitSubjects`, stream `DISTRIBUTION`, subjects `syndication.syndicated|retracted`,
-  `websub.>`), and the control-API types (`dev.jacobandersen.conduit.api`).
+  `ConduitSubjects`, stream `SYNDICATION`, subjects `syndication.syndicated|retracted`),
+  and the control-API types (`dev.jacobandersen.conduit.api`).
 - `conduit-app/` - the Spring Boot server (`bootJar` -> `conduit.jar`).
 
 ## How it works
@@ -25,9 +25,11 @@ Multi-module, mirroring Sigil/Beacon:
   a rename); targets no longer desired are retracted; non-public/deleted posts
   retract copies but retain desired targets so a re-publish re-syndicates. Emits
   `syndication.syndicated|retracted`. The downstream copy is an excerpt +
-  permalink (`SyndicationContentMapper`, grapheme-bounded).
-- **WebSub**: on any content change, pings configured hubs
-  (`conduit.websub.hubs` + `topic-url`); near-stateless.
+  permalink (`SyndicationContentMapper`, grapheme-bounded). Transient send
+  failures (network, 408/425/429/5xx) throw `SyndicationException` so the content
+  event is redelivered; the consumer gives up after `conduit.events.nats.max-deliveries`.
+- **WebSub**: pings configured hubs (`conduit.websub.hubs` + `topic-url`) on
+  publicly-relevant changes only (a published/public post, or a delete); near-stateless.
 - **No cross-service FK**: posts are referenced by the content service's post id.
 
 ## Build and test
@@ -37,6 +39,5 @@ Multi-module, mirroring Sigil/Beacon:
 - Config: `conduit.syndication.*` (targets, budgets), `conduit.websub.*`,
   `conduit.events.nats.*`. See `conduit-app/src/main/resources/application.yaml`.
 - Jackson 3 (`tools.jackson.*`), not Jackson 2.
-- Streams are **per-producer**: Conduit owns `SYNDICATION` (`syndication.>`,
-  plus `websub.>` when emitted); Beacon owns `WEBMENTION`. Never share a stream
-  between producers.
+- Streams are **per-producer**: Conduit owns `SYNDICATION` (`syndication.>`);
+  Beacon owns `WEBMENTION`. Never share a stream between producers.

@@ -1,6 +1,7 @@
 package dev.jacobandersen.conduit.syndication
 
 import dev.jacobandersen.conduit.config.SyndicationProperties
+import dev.jacobandersen.conduit.util.HttpUtil
 import dev.jacobandersen.conduit.util.StringUtil.excerpt
 import dev.jacobandersen.microformats2.Mf2Object
 import org.springframework.http.MediaType
@@ -24,6 +25,7 @@ sealed interface SyndicationSendResult {
     data class Failure(
         val statusCode: Int?,
         val message: String,
+        val retryable: Boolean,
     ) : SyndicationSendResult
 }
 
@@ -78,9 +80,14 @@ class SyndicationHttpClient(
                 location = response.headers.location?.toString(),
             )
         } catch (e: RestClientResponseException) {
-            SyndicationSendResult.Failure(e.statusCode.value(), describeHttpError(e.statusCode.value(), e.responseBodyAsString))
+            val statusCode = e.statusCode.value()
+            SyndicationSendResult.Failure(
+                statusCode = statusCode,
+                message = describeHttpError(statusCode, e.responseBodyAsString),
+                retryable = HttpUtil.isTransientStatus(statusCode),
+            )
         } catch (e: RestClientException) {
-            SyndicationSendResult.Failure(null, e.message ?: e::class.simpleName ?: "Request failed")
+            SyndicationSendResult.Failure(null, e.message ?: e::class.simpleName ?: "Request failed", retryable = true)
         }
 
     private fun describeHttpError(

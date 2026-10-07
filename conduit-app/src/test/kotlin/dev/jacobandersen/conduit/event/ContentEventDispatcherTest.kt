@@ -27,7 +27,12 @@ class ContentEventDispatcherTest {
             checkpointService = checkpointService,
         )
 
-    private fun createdJson(version: Int): String =
+    private fun createdJson(
+        version: Int,
+        status: String = "PUBLISHED",
+        visibility: String = "PUBLIC",
+        deleted: Boolean = false,
+    ): String =
         """
         {
           "eventType": "CREATED",
@@ -35,9 +40,9 @@ class ContentEventDispatcherTest {
           "slug": "s",
           "url": "$url",
           "h": "h-entry",
-          "status": "PUBLISHED",
-          "visibility": "PUBLIC",
-          "deleted": false,
+          "status": "$status",
+          "visibility": "$visibility",
+          "deleted": $deleted,
           "categories": [],
           "version": $version,
           "post": {"type": ["h-entry"], "properties": {"content": ["hi"]}},
@@ -64,5 +69,23 @@ class ContentEventDispatcherTest {
 
         verify(reconciliation, never()).reconcile(any<ContentPostEvent>())
         verify(checkpointService, never()).record(any(), any())
+    }
+
+    @Test
+    fun `does not ping hubs for a draft`() {
+        given(checkpointService.lastApplied(postId)).willReturn(0)
+
+        dispatcher.handle(createdJson(version = 1, status = "DRAFT"))
+
+        verify(websubPublisher, never()).publish()
+    }
+
+    @Test
+    fun `pings hubs for a deleted post`() {
+        given(checkpointService.lastApplied(postId)).willReturn(0)
+
+        dispatcher.handle(createdJson(version = 1, status = "DRAFT", visibility = "PRIVATE", deleted = true))
+
+        verify(websubPublisher).publish()
     }
 }
