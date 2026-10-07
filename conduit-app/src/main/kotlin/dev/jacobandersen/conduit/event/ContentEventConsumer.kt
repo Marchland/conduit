@@ -51,8 +51,14 @@ class ContentEventConsumer(
                 eventDispatcher.handle(String(message.data, Charsets.UTF_8))
                 message.ack()
             } catch (e: Exception) {
-                logger.warn(e) { "Failed to dispatch content event ${message.subject}; will retry" }
-                message.nakWithDelay(Duration.ofSeconds(5))
+                val delivered = message.metaData()?.deliveredCount() ?: 1L
+                if (delivered >= properties.nats.maxDeliveries) {
+                    logger.error(e) { "Dropping content event ${message.subject} after $delivered attempt(s)" }
+                    message.term()
+                } else {
+                    logger.warn(e) { "Failed to dispatch content event ${message.subject} (attempt $delivered); will retry" }
+                    message.nakWithDelay(Duration.ofSeconds(5))
+                }
             }
         }
 

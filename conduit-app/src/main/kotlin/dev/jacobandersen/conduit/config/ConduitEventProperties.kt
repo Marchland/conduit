@@ -18,6 +18,8 @@ data class ConduitEventProperties(
         val contentStream: String = "CONTENT",
         val contentSubject: String = "content.>",
         val contentConsumer: String = "conduit-content",
+        /** Give up redelivering an event after this many dispatch attempts. */
+        val maxDeliveries: Int = 10,
         val distributionStream: String = "SYNDICATION",
         val distributionSubject: String = "syndication.>",
     )

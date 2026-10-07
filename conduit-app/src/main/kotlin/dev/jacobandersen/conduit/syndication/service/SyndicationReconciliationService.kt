@@ -18,6 +18,8 @@ import java.util.UUID
 
 private val logger = KotlinLogging.logger {}
 
+private const val HTTP_NOT_FOUND = 404
+
 /**
  * The neutral input the reconciler works from: a post's identity, visibility
  * and the targets it desires. Built from either a `content.post.*` event or the
@@ -154,7 +156,10 @@ class SyndicationReconciliationService(
             }
 
             is SyndicationSendResult.Failure -> {
-                logger.warn { "Syndication create to \"$targetUid\" for post $postId failed: ${result.message}" }
+                if (result.retryable) {
+                    throw SyndicationException("Syndication create to \"$targetUid\" for post $postId failed: ${result.message}")
+                }
+                logger.warn { "Syndication create to \"$targetUid\" for post $postId permanently failed: ${result.message}" }
             }
         }
     }
@@ -176,7 +181,14 @@ class SyndicationReconciliationService(
                 }
 
                 is SyndicationSendResult.Failure -> {
-                    logger.warn { "Syndication delete to \"$targetUid\" for post $postId failed: ${result.message}" }
+                    if (result.statusCode == HTTP_NOT_FOUND) {
+                        logger.info { "Copy already absent at \"$targetUid\" for post $postId" }
+                    } else if (result.retryable) {
+                        // Keep the record so the retry can run again.
+                        throw SyndicationException("Syndication delete to \"$targetUid\" for post $postId failed: ${result.message}")
+                    } else {
+                        logger.warn { "Syndication delete to \"$targetUid\" for post $postId permanently failed: ${result.message}" }
+                    }
                 }
             }
         }
@@ -202,15 +214,32 @@ class SyndicationReconciliationService(
         if (!target.supports(SyndicationAction.DELETE) || !target.supports(SyndicationAction.CREATE)) return
         if (HttpUtil.isBlockedHost(target.endpoint, failClosedOnDnsError = false)) return
 
-        when (httpClient.sendDelete(target, previousUrl)) {
+        when (val result = httpClient.sendDelete(target, previousUrl)) {
             is SyndicationSendResult.Success -> {
                 logger.info { "Syndication rebase removed old copy for post $postId at \"$targetUid\"" }
             }
 
             is SyndicationSendResult.Failure -> {
-                logger.warn { "Syndication rebase could not remove old copy at \"$targetUid\" for post $postId" }
+                if (result.statusCode == HTTP_NOT_FOUND) {
+                    logger.info { "Syndication rebase: old copy already absent at \"$targetUid\" for post $postId" }
+                } else if (result.retryable) {
+                    throw SyndicationException(
+                        "Syndication rebase could not remove old copy at \"$targetUid\" for post $postId: ${result.message}",
+                    )
+                } else {
+                    // Do not create a second copy if the old one could not be removed.
+                    logger.warn {
+                        "Syndication rebase could not remove old copy at \"$targetUid\" for post $postId; skipping create: ${result.message}"
+                    }
+                    return
+                }
             }
         }
         syndicate(postId, input, targetUid, canonicalUrl)
     }
 }
+
+/** A syndication send failed transiently and should be retried. */
+class SyndicationException(
+    message: String,
+) : RuntimeException(message)
